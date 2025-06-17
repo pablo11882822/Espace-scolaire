@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Tableau de bord - MonEcole</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <h2>MonEcole</h2>
+    <ul>
+      <li onclick="showTab('notes')">Notes</li>
+      <li onclick="showTab('devoirs')">Devoirs</li>
+      <li onclick="showTab('emploi')">Emploi du temps</li>
+      <li onclick="showTab('absences')">Absences</li>
+    </ul>
+  </nav>
+  
+  <div class="tab-content" id="notes">📊 Voici vos notes...</div>
+  <div class="tab-content" id="devoirs" style="display:none;">📝 Voici vos devoirs...</div>
+  <div class="tab-content" id="emploi" style="display:none;">📅 Votre emploi du temps...</div>
+  <div class="tab-content" id="absences" style="display:none;">🚫 Vos absences...</div>
+
+  <script src="script.js"></script>
+</body>
+</html>
