@@ -1,0 +1,21 @@
+function login() {
+  // Pour l'exemple, login simple
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+
+  if (username === "eleve" && password === "1234") {
+    window.location.href = "dashboard.html";
+    return false;
+  } else {
+    alert("Identifiants incorrects");
+    return false;
+  }
+}
+
+function showTab(tabId) {
+  const tabs = document.querySelectorAll(".tab-content");
+  tabs.forEach(tab => tab.style.display = "none");
+
+  const activeTab = document.getElementById(tabId);
+  if (activeTab) activeTab.style.display = "block";
+}
