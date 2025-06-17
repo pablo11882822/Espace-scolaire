@@ -1,0 +1,90 @@
+const express = require('express');
+const session = require('express-session');
+const sqlite3 = require('sqlite3').verbose();
+const bodyParser = require('body-parser');
+const app = express();
+const PORT = 3000;
+
+const db = new sqlite3.Database('./db.sqlite');
+
+app.use(express.static('public'));
+app.set('view engine', 'ejs');
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(session({
+  secret: 'securite123',
+  resave: false,
+  saveUninitialized: true
+}));
+
+// Crée les tables si elles n'existent pas
+db.serialize(() => {
+  db.run(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT,
+    password TEXT,
+    role TEXT
+  )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER,
+    subject TEXT,
+    grade TEXT
+  )`);
+
+  // Utilisateurs de test
+  db.run(`INSERT OR IGNORE INTO users (id, username, password, role) VALUES
+    (1, 'eleve1', '1234', 'eleve'),
+    (2, 'prof1', '1234', 'prof'),
+    (3, 'directeur1', '1234', 'directeur')`);
+});
+
+// Page de login
+app.get('/', (req, res) => {
+  res.render('login');
+});
+
+// Authentification
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  db.get("SELECT * FROM users WHERE username = ? AND password = ?", [username, password], (err, user) => {
+    if (user) {
+      req.session.user = user;
+      res.redirect('/dashboard');
+    } else {
+      res.send("Échec de la connexion");
+    }
+  });
+});
+
+// Dashboard selon le rôle
+app.get('/dashboard', (req, res) => {
+  if (!req.session.user) return res.redirect('/');
+
+  const role = req.session.user.role;
+  if (role === 'eleve') {
+    db.all("SELECT * FROM notes WHERE student_id = ?", [req.session.user.id], (err, notes) => {
+      res.render('dashboard', { user: req.session.user, notes });
+    });
+  } else if (role === 'prof') {
+    db.all("SELECT * FROM users WHERE role = 'eleve'", [], (err, students) => {
+      res.render('prof_notes', { user: req.session.user, students });
+    });
+  } else if (role === 'directeur') {
+    db.all("SELECT * FROM users", [], (err, users) => {
+      res.render('admin_panel', { users });
+    });
+  }
+});
+
+// Ajouter une note (prof)
+app.post('/add-note', (req, res) => {
+  const { student_id, subject, grade } = req.body;
+  db.run("INSERT INTO notes (student_id, subject, grade) VALUES (?, ?, ?)", [student_id, subject, grade], () => {
+    res.redirect('/dashboard');
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(`Serveur lancé sur http://localhost:${PORT}`);
+});
